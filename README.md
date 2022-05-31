@@ -1,5 +1,9 @@
 # httpgzip
-// TODO(user): Add simple overview of use/purpose
+
+### *Note: `httpgzip` has been tested with `1.13.4` version of Istio*
+
+// TODO(user): Add simple overview of use/purpose  
+
 
 ## Description
 // TODO(user): An in-depth paragraph about your project and overview of use
