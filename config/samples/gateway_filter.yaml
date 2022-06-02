@@ -27,5 +27,6 @@ spec:
             compressor_library:
               name: text_optimized
               typed_config:
+                compression_strategy: DEFAULT_STRATEGY
                 '@type': type.googleapis.com/envoy.extensions.compression.gzip.compressor.v3.Gzip
             remove_accept_encoding_header: true
