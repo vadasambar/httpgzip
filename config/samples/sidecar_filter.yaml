@@ -10,6 +10,7 @@ spec:
   configPatches:
     - applyTo: HTTP_FILTER
       match:
+      # https://istio.io/latest/docs/reference/config/networking/envoy-filter/#EnvoyFilter-PatchContext
         context: SIDECAR_INBOUND
         listener:
           filterChain:
@@ -22,11 +23,13 @@ spec:
         value:
           name: envoy.filters.http.compressor
           typed_config:
-            # See https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/compressor_filter for full options
+            # For more info: https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/compressor_filter
             '@type': type.googleapis.com/envoy.extensions.filters.http.compressor.v3.Compressor
             compressor_library:
               name: text_optimized
               typed_config:
+                # "Most of the time “DEFAULT” will be the best choice, though there are situations which changing this parameter might produce better results."
+                # https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/filters/http/gzip/v3/gzip.proto.html
                 compression_strategy: DEFAULT_STRATEGY
                 '@type': type.googleapis.com/envoy.extensions.compression.gzip.compressor.v3.Gzip
             remove_accept_encoding_header: true
