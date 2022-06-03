@@ -1,6 +1,6 @@
 # httpgzip
 
-### *Note: `httpgzip` has been tested with `1.13.4` version of Istio*
+### *Note: `httpgzip` has been tested with `1.14.0` version of Istio*
 
 // TODO(user): Add simple overview of use/purpose  
 
