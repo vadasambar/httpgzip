@@ -1,4 +1,5 @@
 # httpgzip
+K8s controller to enable gzip in a Istio K8s cluster without having to understand the complexities of Envoy and Istio
 
 ### *Note: `httpgzip` has been tested with `1.14.0` version of Istio*
 
