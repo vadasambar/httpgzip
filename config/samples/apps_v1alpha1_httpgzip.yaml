@@ -1,0 +1,6 @@
+apiVersion: apps.vadasambar.com/v1alpha1
+kind: HttpGzip
+metadata:
+  name: httpgzip-sample
+spec:
+  # TODO(user): Add fields here

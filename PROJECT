@@ -6,4 +6,14 @@ plugins:
   scorecard.sdk.operatorframework.io/v2: {}
 projectName: httpgzip
 repo: github.com/vadasambar/httpgzip
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: vadasambar.com
+  group: apps
+  kind: HttpGzip
+  path: github.com/vadasambar/httpgzip/api/v1alpha1
+  version: v1alpha1
 version: "3"
