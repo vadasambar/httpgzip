@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	networking "istio.io/api/networking/v1alpha3"
+	labels "istio.io/istio/pkg/config/labels"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,8 +30,8 @@ type HttpGzipSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of HttpGzip. Edit httpgzip_types.go to remove/update
-	Selector map[string]string `json:"selector,omitempty"`
+	Selector labels.Instance                      `json:"selector,omitempty"`
+	ApplyTo  *networking.EnvoyFilter_PatchContext `json:"applyTo,omitempty"`
 }
 
 // HttpGzipStatus defines the observed state of HttpGzip
