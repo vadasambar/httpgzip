@@ -61,8 +61,9 @@ type HttpGzipCondition struct {
 type HttpGzipStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Phase      HttpGzipPhase       `json:"phase"`
-	Conditions []HttpGzipCondition `json:"conditions"`
+	Phase       HttpGzipPhase       `json:"phase"`
+	Conditions  []HttpGzipCondition `json:"conditions"`
+	EnvoyFilter string              `json:"envoyFilter"`
 }
 
 //+kubebuilder:object:root=true

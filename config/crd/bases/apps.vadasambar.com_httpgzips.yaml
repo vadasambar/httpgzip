@@ -35,13 +35,47 @@ spec:
           spec:
             description: HttpGzipSpec defines the desired state of HttpGzip
             properties:
-              foo:
-                description: Foo is an example field of HttpGzip. Edit httpgzip_types.go
-                  to remove/update
+              applyTo:
                 type: string
+              workLoadSelector:
+                additionalProperties:
+                  type: string
+                type: object
             type: object
           status:
             description: HttpGzipStatus defines the observed state of HttpGzip
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      format: date-time
+                      type: string
+                    message:
+                      type: string
+                    reason:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: integer
+                  required:
+                  - lastTransitionTime
+                  - status
+                  - type
+                  type: object
+                type: array
+              envoyFilter:
+                type: string
+              phase:
+                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                  of cluster Important: Run "make" to regenerate code after modifying
+                  this file'
+                type: string
+            required:
+            - conditions
+            - envoyFilter
+            - phase
             type: object
         type: object
     served: true
