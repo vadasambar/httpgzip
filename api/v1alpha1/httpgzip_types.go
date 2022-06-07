@@ -17,9 +17,22 @@ limitations under the License.
 package v1alpha1
 
 import (
-	networking "istio.io/api/networking/v1alpha3"
-	labels "istio.io/istio/pkg/config/labels"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+type HttpGzipConditionType int
+type ConditionStatus string
+type HttpGzipPhase string
+
+const (
+	Ready            HttpGzipConditionType = 1
+	Provisioned      HttpGzipConditionType = 2
+	ConditionTrue    ConditionStatus       = "True"
+	ConditionFalse   ConditionStatus       = "False"
+	ConditionUnknown ConditionStatus       = "Unknown"
+	Provisioning     HttpGzipPhase         = "Provisioning"
+	Active           HttpGzipPhase         = "Active"
+	Terminating      HttpGzipPhase         = "Terminating"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -30,14 +43,26 @@ type HttpGzipSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Selector labels.Instance                      `json:"selector,omitempty"`
-	ApplyTo  *networking.EnvoyFilter_PatchContext `json:"applyTo,omitempty"`
+	WorkloadSelector map[string]string `json:"workLoadSelector,omitempty"`
+	ApplyTo          string            `json:"applyTo,omitempty"`
+}
+
+type HttpGzipCondition struct {
+	Type   HttpGzipConditionType `json:"type"`
+	Status ConditionStatus       `json:"status"`
+	// +optional
+	Reason string `json:"reason"`
+	// +optional
+	Message            string      `json:"message"`
+	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
 }
 
 // HttpGzipStatus defines the observed state of HttpGzip
 type HttpGzipStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	Phase      HttpGzipPhase       `json:"phase"`
+	Conditions []HttpGzipCondition `json:"conditions"`
 }
 
 //+kubebuilder:object:root=true
