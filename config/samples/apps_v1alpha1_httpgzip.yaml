@@ -3,4 +3,7 @@ kind: HttpGzip
 metadata:
   name: httpgzip-sample
 spec:
-  # TODO(user): Add fields here
+  applTo: 
+    kind: gateway
+    selector:
+      app: bookstore

@@ -38,13 +38,24 @@ const (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+type Kind string
+
+const (
+	Gateway Kind = "gateway"
+	Pod     Kind = "pod"
+)
+
+type ApplyTo struct {
+	Kind     Kind              `json:"kind"`
+	Selector map[string]string `json:"selector"`
+}
+
 // HttpGzipSpec defines the desired state of HttpGzip
 type HttpGzipSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	WorkloadSelector map[string]string `json:"workLoadSelector,omitempty"`
-	ApplyTo          string            `json:"applyTo,omitempty"`
+	ApplyTo ApplyTo `json:"applyTo,omitempty"`
 }
 
 type HttpGzipCondition struct {
