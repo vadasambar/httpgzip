@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	appsv1alpha1 "github.com/vadasambar/httpgzip/api/v1alpha1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 // HttpGzipReconciler reconciles a HttpGzip object
@@ -50,6 +51,16 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	_ = log.FromContext(ctx)
 
 	// TODO(user): your logic here
+	var mw appsv1alpha1.HttpGzip
+	err := r.Client.Get(ctx, req.NamespacedName, &mw)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			log.Log.Info("unable to fetch httpgzip", "name", req.Name, "namespace", req.Namespace)
+			return ctrl.Result{}, nil
+		}
+		log.Log.Error(err, "unable to fetch httpgzip", "name", req.Name, "namespace", req.Namespace)
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
 
 	return ctrl.Result{}, nil
 }
