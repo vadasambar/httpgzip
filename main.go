@@ -33,6 +33,7 @@ import (
 
 	appsv1alpha1 "github.com/vadasambar/httpgzip/api/v1alpha1"
 	"github.com/vadasambar/httpgzip/controllers"
+	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -45,6 +46,8 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(appsv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(networkingv1alpha3.AddToScheme(scheme))
+
 	//+kubebuilder:scaffold:scheme
 }
 
