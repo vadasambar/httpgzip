@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -25,7 +26,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	appsv1alpha1 "github.com/vadasambar/httpgzip/api/v1alpha1"
+	typev1alpha3 "istio.io/api/networking/v1alpha3"
+	clientv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // HttpGzipReconciler reconciles a HttpGzip object
@@ -51,8 +55,8 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	_ = log.FromContext(ctx)
 
 	// TODO(user): your logic here
-	var mw appsv1alpha1.HttpGzip
-	err := r.Client.Get(ctx, req.NamespacedName, &mw)
+	var hg appsv1alpha1.HttpGzip
+	err := r.Client.Get(ctx, req.NamespacedName, &hg)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			log.Log.Info("unable to fetch httpgzip", "name", req.Name, "namespace", req.Namespace)
@@ -60,6 +64,35 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		}
 		log.Log.Error(err, "unable to fetch httpgzip", "name", req.Name, "namespace", req.Namespace)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	if strings.TrimSpace(string(hg.Spec.ApplyTo.Kind)) == "pod" {
+
+	}
+
+	ef := &clientv1alpha3.EnvoyFilter{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "networking.istio.io/v1alpha3",
+			Kind:       "EnvoyFilter",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      hg.Name,
+			Namespace: hg.Namespace,
+		},
+		Spec: typev1alpha3.EnvoyFilter{
+			WorkloadSelector: &typev1alpha3.WorkloadSelector{
+				Labels: hg.Spec.ApplyTo.Selector,
+			},
+			ConfigPatches: []*typev1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{
+				&typev1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{
+					ApplyTo: typev1alpha3.EnvoyFilter_HTTP_FILTER,
+					Match: &typev1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
+						Context: typev1alpha3.EnvoyFilter_PatchContext(),
+					},
+					Patch: &typev1alpha3.Patch{},
+				},
+			},
+		},
 	}
 
 	return ctrl.Result{}, nil
