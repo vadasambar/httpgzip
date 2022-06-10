@@ -36,10 +36,19 @@ spec:
             description: HttpGzipSpec defines the desired state of HttpGzip
             properties:
               applyTo:
-                type: string
-              workLoadSelector:
-                additionalProperties:
-                  type: string
+                properties:
+                  kind:
+                    enum:
+                    - gateway
+                    - pod
+                    type: string
+                  selector:
+                    additionalProperties:
+                      type: string
+                    type: object
+                required:
+                - kind
+                - selector
                 type: object
             type: object
           status:

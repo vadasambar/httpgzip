@@ -46,6 +46,7 @@ const (
 )
 
 type ApplyTo struct {
+	// +kubebuilder:validation:Enum={gateway,pod}
 	Kind     Kind              `json:"kind"`
 	Selector map[string]string `json:"selector"`
 }

@@ -18,15 +18,16 @@ package controllers
 
 import (
 	"context"
-	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	_struct "github.com/golang/protobuf/ptypes/struct"
 	appsv1alpha1 "github.com/vadasambar/httpgzip/api/v1alpha1"
-	typev1alpha3 "istio.io/api/networking/v1alpha3"
+	structpb "google.golang.org/protobuf/types/known/structpb"
+	typesv1alpha3 "istio.io/api/networking/v1alpha3"
 	clientv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -66,11 +67,18 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if strings.TrimSpace(string(hg.Spec.ApplyTo.Kind)) == "pod" {
+	ef := newEnvoyFilter(hg)
 
+	return ctrl.Result{}, nil
+}
+
+func newEnvoyFilter(hg appsv1alpha1.HttpGzip) *clientv1alpha3.EnvoyFilter {
+	context := typesv1alpha3.EnvoyFilter_SIDECAR_INBOUND
+	if hg.Spec.ApplyTo.Kind == appsv1alpha1.Gateway {
+		context = typesv1alpha3.EnvoyFilter_GATEWAY
 	}
 
-	ef := &clientv1alpha3.EnvoyFilter{
+	return &clientv1alpha3.EnvoyFilter{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "networking.istio.io/v1alpha3",
 			Kind:       "EnvoyFilter",
@@ -79,23 +87,59 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			Name:      hg.Name,
 			Namespace: hg.Namespace,
 		},
-		Spec: typev1alpha3.EnvoyFilter{
-			WorkloadSelector: &typev1alpha3.WorkloadSelector{
+		Spec: typesv1alpha3.EnvoyFilter{
+			WorkloadSelector: &typesv1alpha3.WorkloadSelector{
 				Labels: hg.Spec.ApplyTo.Selector,
 			},
-			ConfigPatches: []*typev1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{
-				&typev1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{
-					ApplyTo: typev1alpha3.EnvoyFilter_HTTP_FILTER,
-					Match: &typev1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
-						Context: typev1alpha3.EnvoyFilter_PatchContext(),
+			ConfigPatches: []*typesv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{
+				&typesv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{
+					ApplyTo: typesv1alpha3.EnvoyFilter_HTTP_FILTER,
+					Match: &typesv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
+						Context: context,
+						ObjectTypes: &typesv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
+							Listener: &typesv1alpha3.EnvoyFilter_ListenerMatch{
+								FilterChain: &typesv1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
+
+									Filter: &typesv1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
+										Name: "envoy.filters.network.http_connection_manager",
+										SubFilter: &typesv1alpha3.EnvoyFilter_ListenerMatch_SubFilterMatch{
+											Name: "envoy.filters.http.router",
+										},
+									},
+								},
+							},
+						},
 					},
-					Patch: &typev1alpha3.Patch{},
+					Patch: &typesv1alpha3.EnvoyFilter_Patch{
+						Operation: typesv1alpha3.EnvoyFilter_Patch_INSERT_BEFORE,
+						Value: &_struct.Struct{
+							Fields: map[string]*structpb.Value{
+								"name": structpb.NewStringValue("envoy.filters.http.compressor"),
+								"typed_config": structpb.NewStructValue(&structpb.Struct{
+									Fields: map[string]*structpb.Value{
+										"@type": structpb.NewStringValue("type.googleapis.com/envoy.extensions.filters.http.compressor.v3.Compressor"),
+										"compressor_library": structpb.NewStructValue(&structpb.Struct{
+											Fields: map[string]*structpb.Value{
+												"name": structpb.NewStringValue("text_optimized"),
+												"typed_config": structpb.NewStructValue(
+													&structpb.Struct{
+														Fields: map[string]*structpb.Value{
+															"compression_strategy": structpb.NewStringValue("DEFAULT_STRATEGY"),
+															"@type":                structpb.NewStringValue("type.googleapis.com/envoy.extensions.compression.gzip.compressor.v3.Gzip"),
+														},
+													},
+												),
+											},
+										}),
+										"remove_accept_encoding_header": structpb.NewBoolValue(true),
+									},
+								}),
+							},
+						},
+					},
 				},
 			},
-		},
-	}
-
-	return ctrl.Result{}, nil
+		}}
 }
 
 // SetupWithManager sets up the controller with the Manager.
