@@ -67,7 +67,29 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	ef := newEnvoyFilter(hg)
+	var ef *clientv1alpha3.EnvoyFilter
+	err = r.Client.Get(ctx, req.NamespacedName, ef)
+	ef = newEnvoyFilter(hg)
+
+	if err == nil {
+		err = r.Client.Update(ctx, ef, &client.UpdateOptions{})
+		if err != nil {
+			log.Log.Info("unable to update envoyfilter resource", "name", req.Name, "namespace", req.Namespace)
+			return ctrl.Result{Requeue: true}, err
+		}
+
+	} else {
+		if !apierrors.IsNotFound(err) {
+			log.Log.Info("unable to fetch httpgzip", "name", req.Name, "namespace", req.Namespace)
+			return ctrl.Result{}, nil
+		}
+
+		err = r.Client.Create(ctx, ef, &client.CreateOptions{})
+		if err != nil {
+			log.Log.Info("unable to create envoyfilter resource", "name", req.Name, "namespace", req.Namespace)
+			return ctrl.Result{Requeue: true}, err
+		}
+	}
 
 	return ctrl.Result{}, nil
 }
