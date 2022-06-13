@@ -67,12 +67,12 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	var ef *clientv1alpha3.EnvoyFilter
-	err = r.Client.Get(ctx, req.NamespacedName, ef)
-	ef = newEnvoyFilter(hg)
+	var ef clientv1alpha3.EnvoyFilter
+	err = r.Client.Get(ctx, req.NamespacedName, &ef)
+	newEf := newEnvoyFilter(hg)
 
 	if err == nil {
-		err = r.Client.Update(ctx, ef, &client.UpdateOptions{})
+		err = r.Client.Update(ctx, newEf, &client.UpdateOptions{})
 		if err != nil {
 			log.Log.Info("unable to update envoyfilter resource", "name", req.Name, "namespace", req.Namespace)
 			return ctrl.Result{Requeue: true}, err
@@ -80,11 +80,11 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	} else {
 		if !apierrors.IsNotFound(err) {
-			log.Log.Info("unable to fetch httpgzip", "name", req.Name, "namespace", req.Namespace)
-			return ctrl.Result{}, nil
+			log.Log.Info("unable to fetch envoyfilter not found", "name", req.Name, "namespace", req.Namespace)
+			return ctrl.Result{}, err
 		}
 
-		err = r.Client.Create(ctx, ef, &client.CreateOptions{})
+		err = r.Client.Create(ctx, newEf, &client.CreateOptions{})
 		if err != nil {
 			log.Log.Info("unable to create envoyfilter resource", "name", req.Name, "namespace", req.Namespace)
 			return ctrl.Result{Requeue: true}, err
@@ -108,6 +108,11 @@ func newEnvoyFilter(hg appsv1alpha1.HttpGzip) *clientv1alpha3.EnvoyFilter {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      hg.Name,
 			Namespace: hg.Namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				metav1.OwnerReference{
+					// TODO: fn to get ownerreference based on a resource
+				},
+			},
 		},
 		Spec: typesv1alpha3.EnvoyFilter{
 			WorkloadSelector: &typesv1alpha3.WorkloadSelector{

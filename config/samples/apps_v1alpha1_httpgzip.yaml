@@ -3,7 +3,7 @@ kind: HttpGzip
 metadata:
   name: httpgzip-sample
 spec:
-  applTo: 
-    kind: gateway
+  applyTo: 
+    kind: pod
     selector:
-      app: bookstore
+      app: productpage
