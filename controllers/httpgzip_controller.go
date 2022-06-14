@@ -109,9 +109,7 @@ func newEnvoyFilter(hg appsv1alpha1.HttpGzip) *clientv1alpha3.EnvoyFilter {
 			Name:      hg.Name,
 			Namespace: hg.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
-				metav1.OwnerReference{
-					// TODO: fn to get ownerreference based on a resource
-				},
+				*metav1.NewControllerRef(&hg, hg.GroupVersionKind()),
 			},
 		},
 		Spec: typesv1alpha3.EnvoyFilter{
