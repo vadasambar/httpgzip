@@ -72,6 +72,7 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	newEf := newEnvoyFilter(hg)
 
 	if err == nil {
+		newEf.ResourceVersion = ef.ResourceVersion
 		err = r.Client.Update(ctx, newEf, &client.UpdateOptions{})
 		if err != nil {
 			log.Log.Info("unable to update envoyfilter resource", "name", req.Name, "namespace", req.Namespace)
