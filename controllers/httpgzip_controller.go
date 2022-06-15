@@ -54,17 +54,22 @@ type HttpGzipReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.2/pkg/reconcile
 func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
+	log.Log = log.Log.WithValues("name", req.Name, "namespace", req.Namespace)
 
 	// TODO(user): your logic here
 	var hg appsv1alpha1.HttpGzip
 	err := r.Client.Get(ctx, req.NamespacedName, &hg)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			log.Log.Info("unable to fetch httpgzip", "name", req.Name, "namespace", req.Namespace)
+			log.Log.Info("unable to fetch httpgzip")
 			return ctrl.Result{}, nil
 		}
 		log.Log.Error(err, "unable to fetch httpgzip", "name", req.Name, "namespace", req.Namespace)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	if len(hg.Status.Conditions) == 0 {
+		hg.Status.Conditions = append(hg.Status.Conditions, appsv1alpha1.HttpGzipCondition{})
 	}
 
 	var ef clientv1alpha3.EnvoyFilter
@@ -72,24 +77,48 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	newEf := newEnvoyFilter(hg)
 
 	if err == nil {
+
 		newEf.ResourceVersion = ef.ResourceVersion
 		err = r.Client.Update(ctx, newEf, &client.UpdateOptions{})
 		if err != nil {
 			log.Log.Info("unable to update envoyfilter resource", "name", req.Name, "namespace", req.Namespace)
 			return ctrl.Result{Requeue: true}, err
 		}
+		hg.Status.Conditions[0].Status = appsv1alpha1.ConditionTrue
+		hg.Status.EnvoyFilter = hg.GetName()
+		if err := r.Client.Status().Update(ctx, &hg, &client.UpdateOptions{}); err != nil {
+			log.Log.Error(err, "unable to update HttpGzip resource")
+		}
 
 	} else {
 		if !apierrors.IsNotFound(err) {
-			log.Log.Info("unable to fetch envoyfilter not found", "name", req.Name, "namespace", req.Namespace)
+			log.Log.Error(err, "unable to fetch envoyfilter not found", "name", req.Name, "namespace", req.Namespace)
 			return ctrl.Result{}, err
+		}
+
+		cond := appsv1alpha1.HttpGzipCondition{
+			Type:   appsv1alpha1.Ready,
+			Status: appsv1alpha1.ConditionFalse,
+		}
+		hg.Status.Conditions[0] = cond
+		hg.Status.Conditions[0].LastTransitionTime = metav1.Now()
+
+		if err := r.Client.Status().Update(ctx, &hg, &client.UpdateOptions{}); err != nil {
+			log.Log.Error(err, "unable to update HttpGzip resource")
 		}
 
 		err = r.Client.Create(ctx, newEf, &client.CreateOptions{})
 		if err != nil {
-			log.Log.Info("unable to create envoyfilter resource", "name", req.Name, "namespace", req.Namespace)
+			log.Log.Error(err, "unable to create envoyfilter resource", "name", req.Name, "namespace", req.Namespace)
 			return ctrl.Result{Requeue: true}, err
 		}
+
+		hg.Status.Conditions[0].Status = appsv1alpha1.ConditionTrue
+		hg.Status.EnvoyFilter = hg.GetName()
+		if err := r.Client.Status().Update(ctx, &hg, &client.UpdateOptions{}); err != nil {
+			log.Log.Error(err, "unable to update HttpGzip resource")
+		}
+
 	}
 
 	return ctrl.Result{}, nil

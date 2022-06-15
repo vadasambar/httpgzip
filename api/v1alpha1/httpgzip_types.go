@@ -20,19 +20,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type HttpGzipConditionType int
+type HttpGzipConditionType string
 type ConditionStatus string
 type HttpGzipPhase string
 
 const (
-	Ready            HttpGzipConditionType = 1
-	Provisioned      HttpGzipConditionType = 2
+	Ready            HttpGzipConditionType = "Ready"
 	ConditionTrue    ConditionStatus       = "True"
 	ConditionFalse   ConditionStatus       = "False"
 	ConditionUnknown ConditionStatus       = "Unknown"
-	Provisioning     HttpGzipPhase         = "Provisioning"
-	Active           HttpGzipPhase         = "Active"
-	Terminating      HttpGzipPhase         = "Terminating"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -60,20 +56,15 @@ type HttpGzipSpec struct {
 }
 
 type HttpGzipCondition struct {
-	Type   HttpGzipConditionType `json:"type"`
-	Status ConditionStatus       `json:"status"`
-	// +optional
-	Reason string `json:"reason"`
-	// +optional
-	Message            string      `json:"message"`
-	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
+	Type               HttpGzipConditionType `json:"type"`
+	Status             ConditionStatus       `json:"status"`
+	LastTransitionTime metav1.Time           `json:"lastTransitionTime"`
 }
 
 // HttpGzipStatus defines the observed state of HttpGzip
 type HttpGzipStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Phase       HttpGzipPhase       `json:"phase"`
 	Conditions  []HttpGzipCondition `json:"conditions"`
 	EnvoyFilter string              `json:"envoyFilter"`
 }
