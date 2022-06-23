@@ -54,18 +54,15 @@ type HttpGzipReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.2/pkg/reconcile
 func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
-	log.Log = log.Log.WithValues("name", req.Name, "namespace", req.Namespace)
 
-	// TODO(user): your logic here
 	var hg appsv1alpha1.HttpGzip
 	err := r.Client.Get(ctx, req.NamespacedName, &hg)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			log.Log.Info("unable to fetch httpgzip")
 			return ctrl.Result{}, nil
 		}
 		log.Log.Error(err, "unable to fetch httpgzip", "name", req.Name, "namespace", req.Namespace)
-		return ctrl.Result{}, client.IgnoreNotFound(err)
+		return ctrl.Result{}, err
 	}
 
 	if len(hg.Status.Conditions) == 0 {
@@ -84,10 +81,15 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			log.Log.Info("unable to update envoyfilter resource", "name", req.Name, "namespace", req.Namespace)
 			return ctrl.Result{Requeue: true}, err
 		}
-		hg.Status.Conditions[0].Status = appsv1alpha1.ConditionTrue
-		hg.Status.EnvoyFilter = hg.GetName()
-		if err := r.Client.Status().Update(ctx, &hg, &client.UpdateOptions{}); err != nil {
-			log.Log.Error(err, "unable to update HttpGzip resource")
+
+		// Not sure if we need DeepCopy here
+		// Question on Kubernetes slack: https://kubernetes.slack.com/archives/CAR30FCJZ/p1655957565676159
+		newHg := hg.DeepCopy()
+		newHg.Status.Conditions[0].Status = appsv1alpha1.ConditionTrue
+		newHg.Status.EnvoyFilter = hg.GetName()
+		patch := client.MergeFrom(&hg)
+		if err := r.Client.Status().Patch(ctx, newHg, patch, &client.PatchOptions{}); err != nil {
+			log.Log.Error(err, "unable to update HttpGzip resource", "name", req.Name, "namespace", req.Namespace)
 		}
 
 	} else {
@@ -104,7 +106,7 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		hg.Status.Conditions[0].LastTransitionTime = metav1.Now()
 
 		if err := r.Client.Status().Update(ctx, &hg, &client.UpdateOptions{}); err != nil {
-			log.Log.Error(err, "unable to update HttpGzip resource")
+			log.Log.Error(err, "unable to update HttpGzip resource", "name", req.Name, "namespace", req.Namespace)
 		}
 
 		err = r.Client.Create(ctx, newEf, &client.CreateOptions{})
@@ -116,7 +118,7 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		hg.Status.Conditions[0].Status = appsv1alpha1.ConditionTrue
 		hg.Status.EnvoyFilter = hg.GetName()
 		if err := r.Client.Status().Update(ctx, &hg, &client.UpdateOptions{}); err != nil {
-			log.Log.Error(err, "unable to update HttpGzip resource")
+			log.Log.Error(err, "unable to update HttpGzip resource", "name", req.Name, "namespace", req.Namespace)
 		}
 
 	}

@@ -49,6 +49,10 @@ func TestAPIs(t *testing.T) {
 		[]Reporter{printer.NewlineReporter{}})
 }
 
+// Test cases
+// 1. Httpgzip should create EnvoyFilter
+// 2. Updating Httpgzip should update EnvoyFilter
+// 3. Deleting Httpgzip should delete EnvoyFilter
 var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 

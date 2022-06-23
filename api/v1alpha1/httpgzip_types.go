@@ -65,6 +65,7 @@ type HttpGzipCondition struct {
 type HttpGzipStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
 	Conditions  []HttpGzipCondition `json:"conditions"`
 	EnvoyFilter string              `json:"envoyFilter"`
 }

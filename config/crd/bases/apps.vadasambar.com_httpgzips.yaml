@@ -60,14 +60,10 @@ spec:
                     lastTransitionTime:
                       format: date-time
                       type: string
-                    message:
-                      type: string
-                    reason:
-                      type: string
                     status:
                       type: string
                     type:
-                      type: integer
+                      type: string
                   required:
                   - lastTransitionTime
                   - status
