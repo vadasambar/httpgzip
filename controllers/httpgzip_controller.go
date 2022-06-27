@@ -28,7 +28,7 @@ import (
 	appsv1alpha1 "github.com/vadasambar/httpgzip/api/v1alpha1"
 	structpb "google.golang.org/protobuf/types/known/structpb"
 	typesv1alpha3 "istio.io/api/networking/v1alpha3"
-	clientv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
+	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -69,7 +69,7 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		hg.Status.Conditions = append(hg.Status.Conditions, appsv1alpha1.HttpGzipCondition{})
 	}
 
-	var ef clientv1alpha3.EnvoyFilter
+	var ef networkingv1alpha3.EnvoyFilter
 	err = r.Client.Get(ctx, req.NamespacedName, &ef)
 	newEf := newEnvoyFilter(hg)
 
@@ -127,13 +127,13 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	return ctrl.Result{}, nil
 }
 
-func newEnvoyFilter(hg appsv1alpha1.HttpGzip) *clientv1alpha3.EnvoyFilter {
+func newEnvoyFilter(hg appsv1alpha1.HttpGzip) *networkingv1alpha3.EnvoyFilter {
 	context := typesv1alpha3.EnvoyFilter_SIDECAR_INBOUND
 	if hg.Spec.ApplyTo.Kind == appsv1alpha1.Gateway {
 		context = typesv1alpha3.EnvoyFilter_GATEWAY
 	}
 
-	return &clientv1alpha3.EnvoyFilter{
+	return &networkingv1alpha3.EnvoyFilter{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "networking.istio.io/v1alpha3",
 			Kind:       "EnvoyFilter",
