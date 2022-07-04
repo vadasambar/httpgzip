@@ -1,0 +1,39 @@
+# BEWARE: this file is used in tests
+# Changing it might break tests
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  namespace: default
+  name: httpgzip-sample-pods
+  ownerReferences:
+  - apiVersion: apps.vadasambar.com/v1alpha1
+    blockOwnerDeletion: true
+    controller: true
+    kind: HttpGzip
+    name: httpgzip-sample-pods
+spec:
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: SIDECAR_INBOUND
+      listener:
+        filterChain:
+          filter:
+            name: envoy.filters.network.http_connection_manager
+            subFilter:
+              name: envoy.filters.http.router
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.filters.http.compressor
+        typed_config:
+          '@type': type.googleapis.com/envoy.extensions.filters.http.compressor.v3.Compressor
+          compressor_library:
+            name: text_optimized
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.compression.gzip.compressor.v3.Gzip
+              compression_strategy: DEFAULT_STRATEGY
+          remove_accept_encoding_header: true
+  workloadSelector:
+    labels:
+      app: productpage

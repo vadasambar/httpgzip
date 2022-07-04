@@ -86,8 +86,10 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		// Question on Kubernetes slack: https://kubernetes.slack.com/archives/CAR30FCJZ/p1655957565676159
 		hg.Status.Conditions[0].Status = appsv1alpha1.ConditionTrue
 		hg.Status.EnvoyFilter = hg.GetName()
+		// Patch sets hg.Status to nil if we don't pass a DeepCopy
+		newHg := hg.DeepCopy()
 		patch := client.MergeFrom(&hg)
-		if err := r.Client.Status().Patch(ctx, &hg, patch, &client.PatchOptions{}); err != nil {
+		if err := r.Client.Status().Patch(ctx, newHg, patch, &client.PatchOptions{}); err != nil {
 			log.Log.Error(err, "unable to update HttpGzip resource", "name", req.Name, "namespace", req.Namespace)
 		}
 
@@ -104,8 +106,10 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		hg.Status.Conditions[0] = cond
 		hg.Status.Conditions[0].LastTransitionTime = metav1.Now()
 
+		// Patch sets hg.Status to nil if we don't pass a DeepCopy
+		newHg := hg.DeepCopy()
 		patch := client.MergeFrom(&hg)
-		if err := r.Client.Status().Patch(ctx, &hg, patch, &client.PatchOptions{}); err != nil {
+		if err := r.Client.Status().Patch(ctx, newHg, patch, &client.PatchOptions{}); err != nil {
 			log.Log.Error(err, "unable to update HttpGzip resource", "name", req.Name, "namespace", req.Namespace)
 		}
 
