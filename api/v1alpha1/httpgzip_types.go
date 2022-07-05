@@ -43,7 +43,13 @@ const (
 
 type ApplyTo struct {
 	// +kubebuilder:validation:Enum={gateway,pod}
-	Kind     Kind              `json:"kind"`
+	// Kubernetes Kind for which you want ot enable gzip compression.
+	// Only supports: (pod, gateway)
+	// pod: Kubernetes Pod,
+	// gateway: Istio Gateway
+	Kind Kind `json:"kind"`
+	// Label selector to select pods or gateways for which
+	// you want to enable gzip compression
 	Selector map[string]string `json:"selector"`
 }
 
@@ -52,13 +58,18 @@ type HttpGzipSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
+	// ApplyTo defines the workloads you want to
+	// enable gzip compression for
 	ApplyTo ApplyTo `json:"applyTo,omitempty"`
 }
 
 type HttpGzipCondition struct {
-	Type               HttpGzipConditionType `json:"type"`
-	Status             ConditionStatus       `json:"status"`
-	LastTransitionTime metav1.Time           `json:"lastTransitionTime"`
+	// Type of condition (only `Ready` is supported as of now)
+	Type HttpGzipConditionType `json:"type"`
+	// Either of (True, False, Unknown)
+	Status ConditionStatus `json:"status"`
+	// Last time the resource was synced
+	LastTransitionTime metav1.Time `json:"lastTransitionTime"`
 }
 
 // HttpGzipStatus defines the observed state of HttpGzip
@@ -66,14 +77,17 @@ type HttpGzipStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Conditions  []HttpGzipCondition `json:"conditions"`
-	EnvoyFilter string              `json:"envoyFilter"`
+	// Shows the current state of the resource
+	Conditions []HttpGzipCondition `json:"conditions"`
+	// Name of the EnvoyFilter resource created
+	EnvoyFilter string `json:"envoyFilter"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// HttpGzip is the Schema for the httpgzips API
+// HttpGzip is used to enable http gzip compression
+// for your services (uses Istio's EnvoyFilter custom resource under the hood)
 type HttpGzip struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

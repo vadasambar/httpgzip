@@ -18,7 +18,8 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: HttpGzip is the Schema for the httpgzips API
+        description: HttpGzip is used to enable http gzip compression for your services
+          (uses Istio's EnvoyFilter custom resource under the hood)
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -36,8 +37,13 @@ spec:
             description: HttpGzipSpec defines the desired state of HttpGzip
             properties:
               applyTo:
+                description: ApplyTo defines the workloads you want to enable gzip
+                  compression for
                 properties:
                   kind:
+                    description: 'Kubernetes Kind for which you want ot enable gzip
+                      compression. Only supports: (pod, gateway) pod: Kubernetes Pod,
+                      gateway: Istio Gateway'
                     enum:
                     - gateway
                     - pod
@@ -45,6 +51,8 @@ spec:
                   selector:
                     additionalProperties:
                       type: string
+                    description: Label selector to select pods or gateways for which
+                      you want to enable gzip compression
                     type: object
                 required:
                 - kind
@@ -55,14 +63,19 @@ spec:
             description: HttpGzipStatus defines the observed state of HttpGzip
             properties:
               conditions:
+                description: Shows the current state of the resource
                 items:
                   properties:
                     lastTransitionTime:
+                      description: Last time the resource was synced
                       format: date-time
                       type: string
                     status:
+                      description: Either of (True, False, Unknown)
                       type: string
                     type:
+                      description: Type of condition (only `Ready` is supported as
+                        of now)
                       type: string
                   required:
                   - lastTransitionTime
@@ -71,6 +84,7 @@ spec:
                   type: object
                 type: array
               envoyFilter:
+                description: Name of the EnvoyFilter resource created
                 type: string
             required:
             - conditions
