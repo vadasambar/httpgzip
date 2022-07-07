@@ -84,10 +84,10 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 		// Not sure if we need DeepCopy here
 		// Question on Kubernetes slack: https://kubernetes.slack.com/archives/CAR30FCJZ/p1655957565676159
-		hg.Status.Conditions[0].Status = appsv1alpha1.ConditionTrue
-		hg.Status.EnvoyFilter = hg.GetName()
 		// Patch sets hg.Status to nil if we don't pass a DeepCopy
 		newHg := hg.DeepCopy()
+		newHg.Status.Conditions[0].Status = appsv1alpha1.ConditionTrue
+		newHg.Status.EnvoyFilter = hg.GetName()
 		patch := client.MergeFrom(&hg)
 		if err := r.Client.Status().Patch(ctx, newHg, patch, &client.PatchOptions{}); err != nil {
 			log.Log.Error(err, "unable to update HttpGzip resource", "name", req.Name, "namespace", req.Namespace)
@@ -103,14 +103,14 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			Type:   appsv1alpha1.Ready,
 			Status: appsv1alpha1.ConditionFalse,
 		}
-		hg.Status.Conditions[0] = cond
-		hg.Status.Conditions[0].LastTransitionTime = metav1.Now()
 
 		// Patch sets hg.Status to nil if we don't pass a DeepCopy
 		newHg := hg.DeepCopy()
+		newHg.Status.Conditions[0] = cond
+		newHg.Status.Conditions[0].LastTransitionTime = metav1.Now()
 		patch := client.MergeFrom(&hg)
 		if err := r.Client.Status().Patch(ctx, newHg, patch, &client.PatchOptions{}); err != nil {
-			log.Log.Error(err, "unable to update HttpGzip resource", "name", req.Name, "namespace", req.Namespace)
+			log.Log.Error(err, "unable to update HttpGzip status resource", "name", req.Name, "namespace", req.Namespace)
 		}
 
 		err = r.Client.Create(ctx, newEf, &client.CreateOptions{})
@@ -119,10 +119,12 @@ func (r *HttpGzipReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			return ctrl.Result{Requeue: true}, err
 		}
 
-		hg.Status.Conditions[0].Status = appsv1alpha1.ConditionTrue
-		hg.Status.EnvoyFilter = hg.GetName()
-		patch = client.MergeFrom(&hg)
-		if err := r.Client.Status().Patch(ctx, &hg, patch, &client.PatchOptions{}); err != nil {
+		// Patch sets hg.Status to nil if we don't pass a DeepCopy
+		newHg2 := newHg.DeepCopy()
+		newHg2.Status.Conditions[0].Status = appsv1alpha1.ConditionTrue
+		newHg2.Status.EnvoyFilter = newHg.GetName()
+		patch = client.MergeFrom(newHg)
+		if err := r.Client.Status().Patch(ctx, newHg2, patch, &client.PatchOptions{}); err != nil {
 			log.Log.Error(err, "unable to update HttpGzip resource", "name", req.Name, "namespace", req.Namespace)
 		}
 

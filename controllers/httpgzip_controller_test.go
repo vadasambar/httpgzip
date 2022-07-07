@@ -69,11 +69,17 @@ var _ = Describe("HttpGzip Controller", func() {
 
 				envoyFilter.OwnerReferences[0].UID = ""
 
+				fmt.Println("GATEWAY httpgzipCreated", httpgzipCreated.DeepCopy().Status)
+
 				result := httpgzipCreated.Spec.ApplyTo.Kind == httpgzipv1alphav1.Pod &&
 					httpgzipCreated.Spec.ApplyTo.Selector["app"] == "productpage" &&
 					reflect.DeepEqual(envoyPodFilter.Spec.DeepCopy(), envoyFilter.Spec.DeepCopy()) &&
 					// DeepCopy is not needed for comparing OwnerReferences
-					reflect.DeepEqual(envoyPodFilter.OwnerReferences, envoyFilter.OwnerReferences)
+					reflect.DeepEqual(envoyPodFilter.OwnerReferences, envoyFilter.OwnerReferences) &&
+					httpgzipCreated.Status.EnvoyFilter != "" &&
+					!httpgzipCreated.Status.Conditions[0].LastTransitionTime.IsZero() &&
+					httpgzipCreated.Status.Conditions[0].Type == httpgzipv1alphav1.HttpGzipConditionType(httpgzipv1alphav1.Ready) &&
+					httpgzipCreated.Status.Conditions[0].Status == httpgzipv1alphav1.ConditionTrue
 
 				return result
 
@@ -133,7 +139,11 @@ var _ = Describe("HttpGzip Controller", func() {
 					httpgzipCreated.Spec.ApplyTo.Selector["app"] == "productpage" &&
 					reflect.DeepEqual(envoyGatewayFilter.Spec.DeepCopy(), envoyFilter.Spec.DeepCopy()) &&
 					// DeepCopy is not needed for comparing OwnerReferences
-					reflect.DeepEqual(envoyGatewayFilter.OwnerReferences, envoyFilter.OwnerReferences)
+					reflect.DeepEqual(envoyGatewayFilter.OwnerReferences, envoyFilter.OwnerReferences) &&
+					httpgzipCreated.Status.EnvoyFilter != "" &&
+					!httpgzipCreated.Status.Conditions[0].LastTransitionTime.IsZero() &&
+					httpgzipCreated.Status.Conditions[0].Type == httpgzipv1alphav1.HttpGzipConditionType(httpgzipv1alphav1.Ready) &&
+					httpgzipCreated.Status.Conditions[0].Status == httpgzipv1alphav1.ConditionTrue
 
 				return result
 

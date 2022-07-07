@@ -80,7 +80,7 @@ type HttpGzipStatus struct {
 	// Shows the current state of the resource
 	Conditions []HttpGzipCondition `json:"conditions"`
 	// Name of the EnvoyFilter resource created
-	EnvoyFilter string `json:"envoyFilter"`
+	EnvoyFilter string `json:"envoyFilter,omitempty"`
 }
 
 //+kubebuilder:object:root=true
