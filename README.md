@@ -63,7 +63,7 @@ make undeploy
 ```
 k3d cluster create mycluster -p "8082:80@loadbalancer" --k3s-server-arg "--kube-proxy-arg=conntrack-max-per-core=0"  --k3s-agent-arg "--kube-proxy-arg=conntrack-max-per-core=0" --agents 5 --registry-create
 ```
-`8082:80@loadbalancer` exposes LoadBalancer at 8082 port of localhost (check [official docs](https://k3d.io/v5.4.3/usage/exposing_services/) for more info).
+`8082:80@loadbalancer` exposes LoadBalancer at 8082 port of localhost (check [official docs](https://k3d.io/v5.4.3/usage/exposing_services/) for more info).  
 2. Map your host name in VirtualService/Gateway to 127.0.0.1 in etc/hosts like this:
 ```
 suraj@suraj:~$ cat /etc/hosts
