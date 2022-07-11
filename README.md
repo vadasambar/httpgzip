@@ -21,6 +21,11 @@ spec:
 ```
 Above creates an `EnvoyFilter` resource which looks like [this](./testfiles/envoy_gateway_filter.yaml
 ) for Istio Gateways and like [this](./testfiles/envoy_pod_filter.yaml) for K8s Pods.
+
+Before (notice the bottom right part of the screenshot. You can see gzip is not enabled):
+![before](./gateway-without-httpgzip.png)
+After applying the `HttpGzip` custom resource (notice the bottom right part of the screenshot):
+![after](./gateway-with-httpgzip.png)
 ## Getting Started
 You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) or [K3D](https://k3d.io/v5.4.3/) to get a local cluster for testing, or run against a remote cluster.
 **Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
@@ -52,6 +57,24 @@ UnDeploy the controller to the cluster:
 make undeploy
 ```
 
+## FAQ
+### How do I test if the EnvoyFilter works?
+1. You can create a k3d cluster with LoadBalancer like this:
+```
+k3d cluster create mycluster -p "8082:80@loadbalancer" --k3s-server-arg "--kube-proxy-arg=conntrack-max-per-core=0"  --k3s-agent-arg "--kube-proxy-arg=conntrack-max-per-core=0" --agents 5 --registry-create
+```
+`8082:80@loadbalancer` exposes LoadBalancer at 8082 port of localhost (check [official docs](https://k3d.io/v5.4.3/usage/exposing_services/) for more info).
+2. Map your host name in VirtualService/Gateway to 127.0.0.1 in etc/hosts like this:
+```
+suraj@suraj:~$ cat /etc/hosts
+127.0.0.1	localhost
+127.0.0.1	helloworld.com
+127.0.0.1	bookinfo.com
+...
+```
+3. Access the host in browser using url like `http://bookinfo.com:8082/productpage` 
+4. Check the response headers in browser developer tools to see if gzip is enabled or not.
+![gzip enabled](./gzip-enabled.png)
 ## Contributing
 Any contributions are welcome! This project uses Operator Framework. If you find any issues, 
 - Create an issue and mention `@vadasambar` OR
