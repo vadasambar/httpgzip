@@ -15,7 +15,17 @@ spec:
     singular: httpgzip
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.applyTo.kind
+      name: Kind
+      type: string
+    - jsonPath: .spec.applyTo.selector
+      name: Selector
+      type: string
+    - jsonPath: .status.envoyFilter
+      name: EnvoyFilter
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: HttpGzip is used to enable http gzip compression for your services

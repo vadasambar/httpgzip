@@ -85,7 +85,9 @@ type HttpGzipStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-
+//+kubebuilder:printcolumn:JSONPath=.spec.applyTo.kind,name=Kind,type=string
+//+kubebuilder:printcolumn:JSONPath=.spec.applyTo.selector,name=Selector,type=string
+//+kubebuilder:printcolumn:JSONPath=.status.envoyFilter,name=EnvoyFilter,type=string
 // HttpGzip is used to enable http gzip compression
 // for your services (uses Istio's EnvoyFilter custom resource under the hood)
 type HttpGzip struct {
